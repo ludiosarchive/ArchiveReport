@@ -2,6 +2,7 @@ from chatview import logparser
 from twisted.python.filepath import FilePath
 from datetime import datetime
 import json
+import cgi
 
 # bip-format IRC logs
 LOGS = FilePath(r"C:\Users\root\Documents\Logs\logs")
@@ -39,11 +40,19 @@ def getArchiveMap():
 
 command_to_depth = {"!a": "inf", "!archive": "inf", "!ao": "shallow", "!archiveonly": "shallow"}
 
-def main():
+def isValidArchiveBotUrl(u):
+	return u.startswith("http://") or u.startswith("https://")
+
+def includeUrl(u):
+	# arkiver's nonsense
+	if u.startswith(u"http://bofh.nikhef.nl/events/"):
+		return False
+	return True
+
+def getRequestedUrls():
 	startDate = datetime(2013, 1, 1)
-	archives = getArchiveMap()
 	for line in logparser.bipLogReader(LOGS, "efnet", "#archivebot", startDate):
-		print line.rstrip()
+		##print line.rstrip()
 		data = logparser.lineToStructure(line)
 		if data is None:
 			continue
@@ -51,14 +60,64 @@ def main():
 		message = data.message
 		timestamp = data.timestamp
 		try:
-			command, url, _ = message.split(None, 2)
+			command, url = message.split(None, 1)
+			if " " in url:
+				url, _ = url.split(" ", 1)
 		except ValueError:
+			continue
+		# We don't expect invalid URLs to result in something in the go packs
+		if not (isValidArchiveBotUrl(url) and includeUrl(url)):
 			continue
 		depth = command_to_depth.get(command)
 		if depth is None:
 			# No command, skip line
 			continue
-		print timestamp, nick, depth, url
+		yield timestamp, nick, depth, url
+
+def tableRow(row):
+	b = []
+	b.append("<tr>")
+	for cell in row:
+		b.append("<td>")
+		# hax
+		if cell.startswith("http://") or cell.startswith("https://") or cell.startswith("ftp://"):
+			b.append('<a href="%s">%s</a>' % (cgi.escape(cell), cgi.escape(cell)))
+		else:
+			b.append(cgi.escape(cell))
+		b.append("</td>")
+	b.append("</tr>")
+	return "".join(b)
+
+depth_to_shortcut = {"inf": "!a", "shallow": "!ao"}
+
+def hasPathComponent(url):
+	assert url.startswith("http://") or url.startswith("https://"), url
+	return url.count('/') > 2
+
+def withPathComponent(url):
+	if not hasPathComponent(url):
+		return url + '/'
+	return url
+
+def reportMissing():
+	archives = getArchiveMap()
+	print "<!doctype html>"
+	print "<head>"
+	print '<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />'
+	print '<meta name="referrer" content="never">'
+	print "</head>"
+	print "<body>"
+	print "<style>body, td { white-space: nowrap; font-size: 13px; font-family: Tahoma }</style>"
+	print "<table>"
+	for timestamp, nick, depth, url in getRequestedUrls():
+		if not ((url, depth) in archives or (withPathComponent(url), depth) in archives):
+			print tableRow((timestamp.isoformat(), "<" + nick + ">", depth_to_shortcut[depth], url.encode("utf-8")))
+	print "</table>"
+	print "</body>"
+	print "</html>"
+
+def main():
+	reportMissing()
 
 if __name__ == '__main__':
 	main()
