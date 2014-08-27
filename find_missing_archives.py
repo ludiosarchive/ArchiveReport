@@ -15,6 +15,19 @@ SKIP_JSON_FILES = set([
 	,"twitter.com-shallow-20131219-233747.json"
 ])
 
+JOBS_NOT_MENTIONED_IN_JSON = {
+	 (u"http://electrickery.xs4all.nl/", "inf"): {}
+	,(u"games.mirrors.tds.net", "inf"): {}
+	,(u"mpcdot.com", "inf"): {}
+	,(u"prod2-csa.integra.fr", "inf"): {}
+	,(u"semiaccurate.com", "inf"): {}
+	,(u"sprg.ssl.berkeley.edu", "inf"): {}
+	,(u"tcrf.net", "inf"): {}
+	,(u"www.bierdopje.com", "inf"): {}
+	,(u"www.dragonbox-pyra.com", "inf"): {}
+	,(u"www.neil-kb.com", "inf"): {}
+}
+
 def yieldJsonData():
 	for j in JSON_FILES.walk():
 		if not (j.isfile() and j.path.endswith(".json")):
@@ -30,7 +43,7 @@ def yieldJsonData():
 		yield data
 
 def getArchiveMap():
-	m = {}
+	m = JOBS_NOT_MENTIONED_IN_JSON.copy()
 	for data in yieldJsonData():
 		url = data["url"]
 		fetch_depth = data["fetch_depth"]
