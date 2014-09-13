@@ -3,6 +3,7 @@ from twisted.python.filepath import FilePath
 from datetime import datetime
 import json
 import cgi
+import sys
 
 # bip-format IRC logs
 LOGS = FilePath(r"C:\Users\root\Documents\Logs\logs")
@@ -62,7 +63,7 @@ def includeUrl(u):
 		return False
 	return True
 
-def getRequestedUrls():
+def getRequestedUrls(pipelineOnly):
 	startDate = datetime(2013, 1, 1)
 	for line in logparser.bipLogReader(LOGS, "efnet", "#archivebot", startDate):
 		##print line.rstrip()
@@ -72,6 +73,8 @@ def getRequestedUrls():
 		nick = data.nick
 		message = data.message
 		timestamp = data.timestamp
+		if pipelineOnly and '--pipeline' not in message:
+			continue
 		try:
 			command, url = message.split(None, 1)
 			if " " in url:
@@ -112,7 +115,7 @@ def withPathComponent(url):
 		return url + '/'
 	return url
 
-def reportMissing():
+def reportMissing(pipelineOnly):
 	archives = getArchiveMap()
 	print "<!doctype html>"
 	print "<head>"
@@ -122,7 +125,7 @@ def reportMissing():
 	print "<body>"
 	print "<style>body, td { white-space: nowrap; font-size: 13px; font-family: Tahoma }</style>"
 	print "<table>"
-	for timestamp, nick, depth, url in getRequestedUrls():
+	for timestamp, nick, depth, url in getRequestedUrls(pipelineOnly):
 		if not ((url, depth) in archives or (withPathComponent(url), depth) in archives):
 			print tableRow((timestamp.isoformat(), "<" + nick + ">", depth_to_shortcut[depth], url.encode("utf-8")))
 	print "</table>"
@@ -130,7 +133,8 @@ def reportMissing():
 	print "</html>"
 
 def main():
-	reportMissing()
+	pipelineOnly = '--pipeline-only' in sys.argv
+	reportMissing(pipelineOnly)
 
 if __name__ == '__main__':
 	main()
