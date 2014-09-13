@@ -1,3 +1,5 @@
+#!/usr/bin/python
+
 from chatview import logparser
 from twisted.python.filepath import FilePath
 from datetime import datetime
@@ -18,15 +20,13 @@ SKIP_JSON_FILES = set([
 
 JOBS_NOT_MENTIONED_IN_JSON = {
 	 (u"http://electrickery.xs4all.nl/", "inf"): {}
-	,(u"games.mirrors.tds.net", "inf"): {}
-	,(u"mpcdot.com", "inf"): {}
-	,(u"prod2-csa.integra.fr", "inf"): {}
-	,(u"semiaccurate.com", "inf"): {}
-	,(u"sprg.ssl.berkeley.edu", "inf"): {}
-	,(u"tcrf.net", "inf"): {}
-	,(u"www.bierdopje.com", "inf"): {}
-	,(u"www.dragonbox-pyra.com", "inf"): {}
-	,(u"www.neil-kb.com", "inf"): {}
+	,(u"http://mpcdot.com/forums/", "inf"): {}
+	,(u"http://prod2-csa.integra.fr/", "inf"): {}
+	,(u"http://semiaccurate.com/", "inf"): {}
+	,(u"http://sprg.ssl.berkeley.edu", "inf"): {}
+	,(u"http://tcrf.net/", "inf"): {}
+	,(u"http://www.bierdopje.com/", "inf"): {}
+	,(u"http://www.neil-kb.com/", "inf"): {}
 }
 
 def yieldJsonData():
